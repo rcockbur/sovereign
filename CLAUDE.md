@@ -63,6 +63,11 @@ Stack-based in `core/gamestate.lua`. States: `loading`, `main_menu`, `playing`. 
 - Never guard against missing data with `if x then` when missing data indicates a programming error
 - Use `== false` instead of `not`
 
+### Linter Warnings
+- Leave meaningful parameter names on stubs even if they produce unused-variable warnings.
+  A warning on `time` or `unit` signals "this will be used when the stub is implemented."
+  Do not suppress with `_` or `_name` — that erases intent.
+
 ### IDs
 - One global incrementing counter for all entity types (units, memories, buildings, jobs, furniture, hauling rules)
 - Counter lives on the registry module: `registry:nextId()`

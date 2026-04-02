@@ -1,91 +1,198 @@
-require("lldebugger").start()
+-- main.lua
+if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+    require("lldebugger").start()
+end
 
-local Config   = require("src.config.config")
-local Time     = require("src.core.time")
-local Registry = require("src.core.registry")
-local World    = require("src.core.world")
-local Unit     = require("src.simulation.unit")
-local Camera   = require("src.ui.camera")
-local Renderer = require("src.ui.renderer")
+-- Config globals must be set before any module that reads them is loaded.
+require("config.constants")
+require("config.needs")
+require("config.health")
+require("config.jobs")
+require("config.resources")
+require("config.buildings")
 
--- Living units list (separate from registry for iteration)
-local units = {}
+local gamestate  = require("core.gamestate")
+local log        = require("core.log")
+local registry   = require("core.registry")
+local time       = require("core.time")
+local world      = require("core.world")
+local simulation = require("core.simulation")
+local units      = require("simulation.unit")
+local jobqueue   = require("simulation.jobqueue")
+local dynasty    = require("simulation.dynasty")
 
-function love.load()
-    love.window.setTitle("Sovereign")
-    love.window.setMode(Config.window_width, Config.window_height, { resizable = true })
+local camera   = require("ui.camera")
+local input    = require("ui.input")
+local overlay  = require("ui.overlay")
+local renderer = require("ui.renderer")
 
-    -- Generate the world
-    World.generate()
+-- ---------------------------------------------------------------------------
+-- New-game setup: reset all modules then build a fresh world.
+-- ---------------------------------------------------------------------------
 
-    -- Spawn starting units in the settlement half
-    local max_x = math.floor(World.width / 2)
-    for i = 1, Config.starting_unit_count do
-        local x = math.random(5, max_x - 5)
-        local y = math.random(5, World.height - 5)
-        local tier = (i == 1) and Config.Tier.GENTRY or Config.Tier.SERF
-        local unit = Unit.create(x, y, tier)
+local STARTING_X = 50   -- column in the settlement area
+local STARTING_Y = 100  -- centre of the map vertically
 
-        if i == 1 then
-            unit.is_leader = true
-            unit.name = "Lord " .. unit.name
-            unit.virtues.charisma = math.random(6, 10)
-            unit.skills.combat = math.random(3, 6)
-        end
+local function newGame()
+    -- Reset all stateful modules in dependency order.
+    registry:reset()
+    units:reset()
+    world:reset()
+    jobqueue:reset()
+    dynasty:reset()
+    time:reset()
 
-        table.insert(units, unit)
+    world:generate()
+
+    -- Starting population: 6 Serfs + 1 Gentry (the first leader).
+    local sx, sy = STARTING_X, STARTING_Y
+    units:create({ x = sx,     y = sy,     tier = Tier.SERF })
+    units:create({ x = sx + 2, y = sy,     tier = Tier.SERF })
+    units:create({ x = sx + 4, y = sy,     tier = Tier.SERF })
+    units:create({ x = sx,     y = sy + 2, tier = Tier.SERF })
+    units:create({ x = sx + 2, y = sy + 2, tier = Tier.SERF })
+    units:create({ x = sx + 4, y = sy + 2, tier = Tier.SERF })
+
+    local leader = units:create({ x = sx + 2, y = sy - 2, tier = Tier.GENTRY,
+                                   name = "Edmund" })
+    dynasty:appoint(leader)
+
+    camera.x    = sx + 2
+    camera.y    = sy
+    camera.zoom = 1.0
+end
+
+-- ---------------------------------------------------------------------------
+-- Loading state — require configs (already done above), switch to main_menu.
+-- ---------------------------------------------------------------------------
+
+function gamestate.loading:enter()
+    gamestate:switch(gamestate.main_menu)
+end
+
+-- ---------------------------------------------------------------------------
+-- Main menu state
+-- ---------------------------------------------------------------------------
+
+local TITLE_FONT = nil   -- created lazily in draw (love not yet initialised at require time)
+
+function gamestate.main_menu:enter()
+    log:info("STATE", "Main menu")
+end
+
+function gamestate.main_menu:draw()
+    if TITLE_FONT == nil then
+        TITLE_FONT = love.graphics.newFont(32)
     end
+    local w, h = love.graphics.getDimensions()
+    love.graphics.clear(0.05, 0.05, 0.08)
 
-    -- Center camera on settlement
-    Camera.x = 0
-    Camera.y = (World.height * Config.tile_size / 2) - (Config.window_height / 2)
-    Camera.clamp()
+    love.graphics.setFont(TITLE_FONT)
+    love.graphics.setColor(0.9, 0.85, 0.6)
+    love.graphics.printf("SOVEREIGN", 0, h * 0.3, w, "center")
+
+    love.graphics.setFont(love.graphics.newFont(16))
+    love.graphics.setColor(0.75, 0.75, 0.75)
+    love.graphics.printf("N  —  New Game", 0, h * 0.55, w, "center")
+    love.graphics.printf("Escape  —  Quit", 0, h * 0.62, w, "center")
+
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
-function love.update(dt)
-    -- Time
-    local hours_ticked = Time.update(dt)
-
-    -- Camera
-    Camera.update(dt)
-
-    -- Unit wandering (temporary scaffolding)
-    for _, unit in ipairs(units) do
-        Unit.updateWander(unit, dt)
-    end
-end
-
-function love.draw()
-    -- World and units (camera space)
-    Camera.applyTransform()
-    Renderer.drawMap()
-    Renderer.drawUnits(units)
-    Camera.resetTransform()
-
-    -- HUD (screen space)
-    Renderer.drawHUD()
-end
-
-function love.wheelmoved(x, y)
-    Camera.onMouseWheel(x, y)
-end
-
-function love.keypressed(key)
-    if key == "space" then
-        Time.paused = not Time.paused
-    elseif key == "1" then
-        Time.speed_multiplier = 1
-    elseif key == "2" then
-        Time.speed_multiplier = 2
-    elseif key == "3" then
-        Time.speed_multiplier = 5
-    elseif key == "4" then
-        Time.speed_multiplier = 10
+function gamestate.main_menu:keypressed(key)
+    if key == "n" then
+        newGame()
+        gamestate:switch(gamestate.playing)
     elseif key == "escape" then
         love.event.quit()
     end
 end
 
+-- ---------------------------------------------------------------------------
+-- Playing state
+-- ---------------------------------------------------------------------------
+
+local function quitToMenu()
+    log:info("STATE", "Returning to main menu")
+    gamestate:switch(gamestate.main_menu)
+end
+
+function gamestate.playing:update(dt)
+    camera:update(dt, input)
+
+    if time.is_paused == false then
+        local ticks = time:accumulate(dt)
+        for _ = 1, ticks do
+            time:advance()
+            simulation:onTick(time)
+        end
+    end
+end
+
+function gamestate.playing:draw()
+    love.graphics.clear(0, 0, 0)
+    camera:attach()
+    renderer:drawWorld(world, units)
+    camera:detach()
+    overlay:draw(time, units, world, jobqueue, camera)
+end
+
+function gamestate.playing:keypressed(key)
+    if input:isActionPressed("pause", key) then
+        time.is_paused = not time.is_paused
+        log:info("STATE", "Simulation %s", time.is_paused and "paused" or "resumed")
+    elseif input:isActionPressed("speed_1", key) then
+        time.speed = Speed.NORMAL
+    elseif input:isActionPressed("speed_2", key) then
+        time.speed = Speed.FAST
+    elseif input:isActionPressed("speed_3", key) then
+        time.speed = Speed.VERY_FAST
+    elseif input:isActionPressed("speed_4", key) then
+        time.speed = Speed.ULTRA
+    elseif input:isActionPressed("dev_overlay", key) then
+        overlay:toggle()
+    elseif key == "escape" then
+        quitToMenu()
+    end
+end
+
+function gamestate.playing:wheelmoved(x, y)
+    camera:adjustZoom(y)
+end
+
+-- ---------------------------------------------------------------------------
+-- Love2D callbacks — delegate to gamestate
+-- ---------------------------------------------------------------------------
+
+function love.load()
+    log:info("STATE", "Sovereign starting up")
+    gamestate:switch(gamestate.loading)
+end
+
+function love.update(dt)
+    gamestate:update(dt)
+end
+
+function love.draw()
+    gamestate:draw()
+end
+
+function love.keypressed(key)
+    gamestate:keypressed(key)
+end
+
+function love.mousepressed(x, y, button)
+    gamestate:mousepressed(x, y, button)
+end
+
+function love.wheelmoved(x, y)
+    gamestate:wheelmoved(x, y)
+end
+
 function love.resize(w, h)
-    Camera.clamp()
+    gamestate:resize(w, h)
+end
+
+function love.quit()
+    log:info("STATE", "Sovereign shutting down")
 end
