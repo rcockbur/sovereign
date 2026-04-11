@@ -1,5 +1,5 @@
 # FILES.md — Document System Reference
-*v1*
+*v2*
 
 ## Documents
 
@@ -11,9 +11,9 @@
 
 **DESIGN.md** — Player-facing design intent: pillars, setting, feature descriptions, phase definitions, the "why" behind gameplay decisions, pending design sections. No mechanical detail — cross-references the technical files for all specifics.
 
-**BRAINSTORMING.md** — Loosely defined ideas, deferred systems, and speculative content. Not attached to the Claude project. Upload manually when the session topic requires it.
+**_BRAINSTORMING.md** — Loosely defined ideas, deferred systems, and speculative content. Not attached to the Claude project. Upload manually when the session topic requires it.
 
-All documents except BRAINSTORMING.md live at the repo root and are attached to the Claude.ai project.
+All documents except _BRAINSTORMING.md live at the repo root and are attached to the Claude.ai project.
 
 ## Structure and Formatting
 

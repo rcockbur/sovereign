@@ -1,5 +1,5 @@
 # Sovereign — WORLD.md
-*v1 · Physical map: terrain, generation, pathfinding, building layout, plant system.*
+*v2 · Physical map: terrain, generation, pathfinding, building layout, plant system.*
 
 ## Map
 
@@ -23,7 +23,7 @@ All tiles start explored and visible until forest gameplay is implemented.
 
 **Design (for future implementation):** `tile.is_explored` (permanent) + `tile.visible_count` (current unit count). Recompute on tile change only. Double-buffered visibility sets per unit (keyed by tileIndex). Reveal events on `visible_count` 0→1.
 
-**Vision rules are not yet decided.** See BRAINSTORMING.md for an asymmetric vision approach under consideration. `SIGHT_RADIUS` (8) and `FOREST_SIGHT_RADIUS` (3) are placeholder values.
+**Vision rules are not yet decided.** `SIGHT_RADIUS` (8) and `FOREST_SIGHT_RADIUS` (3) are placeholder values.
 
 ## Map Generation
 

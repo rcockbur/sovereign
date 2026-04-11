@@ -1,5 +1,5 @@
 # Sovereign — Design Document
-*v1*
+*v2*
 
 ## Project Overview
 
@@ -63,7 +63,7 @@ Development is organized into six phases. Each phase produces a qualitatively di
 - Herbalist's hut — deferred from Phase 1; herbs have no consumer until physician exists in Phase 3
 - Tavern — recreation fulfillment, beer delivery/consumption, staffed vs unstaffed behavior
 - Apothecary mechanics — herb consumption, patient detection, physician travel logic
-- Trait config — mechanical values for Crippled, Haunted (see BRAINSTORMING.md for Touched, Changeling)
+- Trait config — mechanical values for Crippled, Haunted (see _BRAINSTORMING.md for Touched, Changeling)
 
 **Phase 4 — Generations.** Time becomes the central mechanic. Units age, marry, have children, and die of old age. Children attend school or work based on class. The dynasty matters — the leader's death triggers succession, and the heir's readiness (or lack thereof) creates drama. Clergy provide spiritual services, gentry consume resources without working. Social relationships form between units. The game delivers on the "individual stories" and "dynasty as through-line" pillars.
 
@@ -81,31 +81,31 @@ Development is organized into six phases. Each phase produces a qualitatively di
 **Phase 5 — Dangerous World.** The world beyond the village becomes a threat. Combat mechanics enable military response to bandits, wolves, and forest creatures. Visibility and fog of war make the forest a place of uncertainty. Scouts reveal the map, knights train at the barracks. Drafting pulls units from their jobs, creating economic tension. Injuries from combat require medical treatment. The "losing is fun" pillar expands beyond mismanagement to include external pressure.
 
 *Pending:*
-- Combat mechanics — melee system, unit stats, threat encounters (see BRAINSTORMING.md)
-- Knight specialty — granting knighthood, gentry promotion, training system (see BRAINSTORMING.md)
-- Barracks — function, training mechanics (see BRAINSTORMING.md)
-- Ranged combat, scout job (see BRAINSTORMING.md)
-- Visibility system — vision rules, implementation approach (see BRAINSTORMING.md)
+- Combat mechanics — melee system, unit stats, threat encounters (see _BRAINSTORMING.md)
+- Knight specialty — granting knighthood, gentry promotion, training system (see _BRAINSTORMING.md)
+- Barracks — function, training mechanics (see _BRAINSTORMING.md)
+- Ranged combat, scout job (see _BRAINSTORMING.md)
+- Visibility system — vision rules, implementation approach (see _BRAINSTORMING.md)
 - Movement speed formula — trait effects on speed
 
-**Phase 6 — The Strange.** The game's supernatural layer emerges. Fey creatures inhabit the deep forest with their own alien logic — some can be bargained with, others must be fought. Christian supernatural forces introduce ghosts, demons, and possessed units. The scholar unlocks arcane magic through research, the bishop receives divine power through the Vision. The game world deepens from a grounded medieval settlement into something stranger and more mythic. See BRAINSTORMING.md for creature lists, encounter concepts, and magic system ideas.
+**Phase 6 — The Strange.** The game's supernatural layer emerges. Fey creatures inhabit the deep forest with their own alien logic — some can be bargained with, others must be fought. Christian supernatural forces introduce ghosts, demons, and possessed units. The scholar unlocks arcane magic through research, the bishop receives divine power through the Vision. The game world deepens from a grounded medieval settlement into something stranger and more mythic. See _BRAINSTORMING.md for creature lists, encounter concepts, and magic system ideas.
 
 *Pending:*
-- Fey mechanics — encounter design, diplomacy, late-game escalation (see BRAINSTORMING.md)
-- Magic — arcane tech tree, divine scripture, spell lists, mana rates (see BRAINSTORMING.md)
+- Fey mechanics — encounter design, diplomacy, late-game escalation (see _BRAINSTORMING.md)
+- Magic — arcane tech tree, divine scripture, spell lists, mana rates (see _BRAINSTORMING.md)
 - Witch gender setting — mechanical effect (depends on arcane magic system)
-- Cathedral, Library, and Christmas Mass — late-game service buildings and events (see BRAINSTORMING.md)
+- Cathedral, Library, and Christmas Mass — late-game service buildings and events (see _BRAINSTORMING.md)
 
 **Unphased.** Ideas and systems that don't belong to a specific phase yet.
 
 - Hauling order priority — per-order priority for scarce hauler situations
 - Town hall — function, governance mechanics
 - Luxury goods beyond jewelry
-- Animal husbandry (see BRAINSTORMING.md)
-- External trade (see BRAINSTORMING.md)
-- Event speed controls (see BRAINSTORMING.md)
-- Apprenticeship system (see BRAINSTORMING.md)
-- Gentry activities (see BRAINSTORMING.md)
+- Animal husbandry (see _BRAINSTORMING.md)
+- External trade (see _BRAINSTORMING.md)
+- Event speed controls (see _BRAINSTORMING.md)
+- Apprenticeship system (see _BRAINSTORMING.md)
+- Gentry activities (see _BRAINSTORMING.md)
 
 ## Time
 
@@ -163,7 +163,7 @@ The forest is dense and resource-rich — a wall the player carves into.
 
 Forest resources are tiered by depth. Basic materials are available everywhere, rarer materials require venturing deeper. Some late-game systems, including magic, are gated behind deep resources.
 
-The forest is home to animals, hostile human factions, ruins, and Fey. The game begins feeling entirely grounded — supernatural elements escalate gradually. See BRAINSTORMING.md for creature lists and encounter concepts.
+The forest is home to animals, hostile human factions, ruins, and Fey. The game begins feeling entirely grounded — supernatural elements escalate gradually. See _BRAINSTORMING.md for creature lists and encounter concepts.
 
 See WORLD.md for forest coverage, plant types, growth/spread mechanics, and movement costs.
 
@@ -189,7 +189,7 @@ Magic is a late-game system that emerges from existing unit progression. Rare, s
 
 **Divine progression:** Priest/Bishop levels priesthood skill. Divine magic unlocks through the Vision — a dramatic narrative event at a Bishop skill threshold. All divine spells unlock simultaneously. The Bishop gains the Blessed trait.
 
-*Specific spells, mana rates, tech tree, and scripture mechanics deferred to BRAINSTORMING.md.*
+*Specific spells, mana rates, tech tree, and scripture mechanics deferred to _BRAINSTORMING.md.*
 
 See TABLES.md for magic data structure.
 
@@ -223,10 +223,10 @@ Traits are permanent tags representing significant thresholds or events. Rare �
 | Magician | Acquired | Unlocked arcane magic through Alchemy. Can cast arcane spells. |
 | Haunted | Acquired | Persistent mood penalty. Worsens near supernatural events. |
 | Crippled | Acquired | Permanent movement or productivity penalty. |
-| Marked | Genetic | The Fey take interest. Affects Fey encounter outcomes. |
+| Changeling | Genetic | The Fey take interest. Affects Fey encounter outcomes. |
 | Touched | Acquired | Result of direct Fey contact. Ambiguous effect. |
 
-*TraitConfig with mechanical values is pending. Blessed/Magician depend on magic system; Marked/Touched depend on Fey system.*
+*TraitConfig with mechanical values is pending. Blessed/Magician depend on magic system; Changeling/Touched depend on Fey system.*
 
 ## Needs, Mood, and Health
 
