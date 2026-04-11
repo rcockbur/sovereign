@@ -103,9 +103,7 @@ BuildingConfig uses `default_` prefixed fields for values that are copied to run
 
 CLAUDE CODE GUIDANCE
 
-- Claude Code may update CLAUDE.md and the technical reference files to reflect implementation details: function signatures, module locations, call patterns, actual field names used in code.
-- Claude Code does **not** add, change, or remove design decisions. If implementation reveals a design gap or forces a choice not covered by the specs, add a brief note to the **Pending Review** section at the top of this file. Do not decide and document it as settled.
-- The test: "Would Ross want to discuss this before it was locked in?" If yes, it goes in Pending Review.
+Claude Code edits only the Pending Review section of CLAUDE.md. All other content in all project documents is off-limits without explicit instruction. If implementation reveals a discrepancy or design gap, add a brief note to Pending Review.
 
 FLAT INDEX CONVENTION
 
