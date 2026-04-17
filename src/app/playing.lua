@@ -1,51 +1,20 @@
 -- app/playing.lua
 -- Playing state. Runs the simulation; escape returns to main menu.
 
-local gamestate = require("app.gamestate")
-local world     = require("core.world")
-local time      = require("core.time")
-local units     = require("simulation.units")
-local camera    = require("ui.camera")
-local renderer  = require("ui.renderer")
-local hub       = require("ui.hub")
-local log       = require("core.log")
+local gamestate    = require("app.gamestate")
+local time         = require("core.time")
+local simulation   = require("core.simulation")
+local units        = require("simulation.units")
+local camera       = require("ui.camera")
+local renderer     = require("ui.renderer")
+local hub          = require("ui.hub")
 
 local playing = {}
 
-local prev_hour
-
 function playing.enter()
-    world.init()
     time.init()
     camera.init()
     units.spawnStarting()
-    prev_hour = -1
-
-    local settle = { grass=0, water=0, rock=0, tree=0, berry=0 }
-    local forest  = { grass=0, water=0, rock=0, tree=0, berry=0 }
-    for x = 1, MAP_WIDTH do
-        for y = 1, MAP_HEIGHT do
-            local t    = world.tiles[tileIndex(x, y)]
-            local half = x <= SETTLEMENT_COLUMNS and settle or forest
-            if t.terrain == "water" then
-                half.water = half.water + 1
-            elseif t.terrain == "rock" then
-                half.rock = half.rock + 1
-            elseif t.plant_type == "tree" then
-                half.tree = half.tree + 1
-            elseif t.plant_type == "berry_bush" then
-                half.berry = half.berry + 1
-            else
-                half.grass = half.grass + 1
-            end
-        end
-    end
-    log:info("WORLD", "Settlement — grass:%d water:%d rock:%d tree:%d berry:%d",
-        settle.grass, settle.water, settle.rock, settle.tree, settle.berry)
-    log:info("WORLD", "Forest     — grass:%d water:%d rock:%d tree:%d berry:%d",
-        forest.grass, forest.water, forest.rock, forest.tree, forest.berry)
-    log:info("WORLD", "Settlement: %s  Seed: %d",
-        world.settings.settlement_name, world.seed)
 end
 
 function playing.update(dt)
@@ -53,14 +22,7 @@ function playing.update(dt)
 
     local ticks = time.accumulate(dt)
     for _ = 1, ticks do
-        time.advance()
-    end
-
-    local wt = world.time
-    if wt.game_hour ~= prev_hour then
-        prev_hour = wt.game_hour
-        log:info("TIME", "Year %d  Season %d  Day %d  Hour %d",
-            wt.game_year, wt.game_season, wt.game_day, wt.game_hour)
+        simulation.onTick()
     end
 end
 

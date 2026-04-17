@@ -2,6 +2,8 @@
 -- A* pathfinder with binary heap open list.
 -- Two modes: destination (specific tile) and adjacent-to-rect (any unclaimed orthogonal neighbor).
 
+local world = require("core.world")
+
 local pathfinding = {}
 
 -- Reusable parallel-array heap; reset at the start of each search.
@@ -51,17 +53,7 @@ local function heapPop()
     return f, idx
 end
 
--- Returns movement cost for a tile, or nil if impassable.
--- Building wall/phase checks are added here when buildings come online (Phase 2).
-local function getTileCost(tile)
-    if tile.terrain == "water" or tile.terrain == "rock" then
-        return nil
-    end
-    if tile.plant_type == "tree" and tile.plant_growth >= 2 then
-        return BASE_MOVE_COST * TREE_MOVE_MULTIPLIER
-    end
-    return BASE_MOVE_COST
-end
+local getTileCost = world.getTileCost
 
 local function clamp(v, lo, hi)
     if v < lo then return lo end

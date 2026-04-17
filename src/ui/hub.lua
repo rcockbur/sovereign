@@ -5,6 +5,7 @@
 local world    = require("core.world")
 local registry = require("core.registry")
 local camera   = require("ui.camera")
+local units    = require("simulation.units")
 
 local hub = {}
 
@@ -101,9 +102,18 @@ function hub.mousepressed(x, y, button)
         hub.selected_tile = tile_idx
 
     elseif button == 2 then
-        hub.selected      = nil
-        hub.selected_type = nil
-        hub.selected_tile = nil
+        if hub.selected_type == "unit" then
+            local wx, wy = camera.screenToWorld(x, y)
+            local tx = math.floor(wx / TILE_SIZE) + 1
+            local ty = math.floor(wy / TILE_SIZE) + 1
+            if tx >= 1 and tx <= MAP_WIDTH and ty >= 1 and ty <= MAP_HEIGHT then
+                units.startMove(hub.selected, tileIndex(tx, ty))
+            end
+        else
+            hub.selected      = nil
+            hub.selected_type = nil
+            hub.selected_tile = nil
+        end
     end
 end
 

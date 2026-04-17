@@ -26,6 +26,7 @@ local ring_count = 0
 local overlay_severity = LEVEL_INFO
 local file_severity    = LEVEL_DEBUG
 local log_filename     = nil
+local current_filename = "logs/current.log"
 
 local writeEntry
 local logAt
@@ -47,6 +48,9 @@ function log:init()
     end
 
     log_filename = "logs/" .. os.date("%Y-%m-%d_%H-%M-%S") .. ".log"
+    log.filepath = love.filesystem.getSaveDirectory() .. "/" .. current_filename
+    love.filesystem.write(log_filename, "")
+    love.filesystem.write(current_filename, "")
 end
 
 function log:error(category, fmt, ...) logAt(LEVEL_ERROR, category, fmt, ...) end
@@ -87,6 +91,7 @@ function writeEntry(level, category, message)
 
     if level <= file_severity and log_filename then
         love.filesystem.append(log_filename, entry .. "\n")
+        love.filesystem.append(current_filename, entry .. "\n")
     end
 end
 

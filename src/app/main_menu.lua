@@ -1,8 +1,8 @@
 -- app/main_menu.lua
 -- Main menu state. Shows title and "New Game" button. Escape quits.
 
-local gamestate = require("app.gamestate")
-local playing   = require("app.playing")
+local gamestate   = require("app.gamestate")
+local generating  = require("app.generating")
 
 local main_menu = {}
 
@@ -39,7 +39,7 @@ end
 function main_menu.mousepressed(x, y, button)
     if button == 1 then
         if x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h then
-            gamestate:switch(playing)
+            gamestate:switch(generating)
         end
     end
 end

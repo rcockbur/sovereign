@@ -3,6 +3,7 @@
 -- Operates on world.time. TPS tracking fields live here — transient, not serialized.
 
 local world = require("core.world")
+local log   = require("core.log")
 
 local time = {}
 
@@ -46,9 +47,15 @@ function time.accumulate(dt)
 end
 
 function time.advance()
+    local prev_hour        = world.time.game_hour
     world.time.tick        = world.time.tick + 1
     time.ticks_this_second = time.ticks_this_second + 1
     updateCalendar()
+    if world.time.game_hour ~= prev_hour then
+        local wt = world.time
+        log:info("TIME", "Year %d  Season %d  Day %d  Hour %d",
+            wt.game_year, wt.game_season, wt.game_day, wt.game_hour)
+    end
 end
 
 function time.hashOffset(id)

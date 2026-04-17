@@ -64,8 +64,25 @@ function renderer.drawUnits()
     for i = 1, #world.units do
         local u = world.units[i]
         if u.is_dead == false then
+            local px = (u.x - 1) * ts + half
+            local py = (u.y - 1) * ts + half
+
+            if u.path ~= nil then
+                local next_idx  = u.path.tiles[u.path.current]
+                local nx, ny    = tileXY(next_idx)
+                local tile_cost = world.getTileCost(world.tiles[next_idx])
+                if tile_cost ~= nil then
+                    local dx = math.abs(nx - u.x)
+                    local dy = math.abs(ny - u.y)
+                    if dx == 1 and dy == 1 then tile_cost = tile_cost * SQRT2 end
+                    local lerp_t = math.min(u.move_progress / tile_cost, 1.0)
+                    px = px + (nx - u.x) * ts * lerp_t
+                    py = py + (ny - u.y) * ts * lerp_t
+                end
+            end
+
             love.graphics.setColor(COLOR_UNIT)
-            love.graphics.circle("fill", (u.x - 1) * ts + half, (u.y - 1) * ts + half, r)
+            love.graphics.circle("fill", px, py, r)
         end
     end
 end

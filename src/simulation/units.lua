@@ -1,11 +1,19 @@
 -- simulation/units.lua
--- Unit lifecycle: creation, spawn, death sweep. Operates on world.units.
+-- Unit lifecycle: creation, spawn, movement, death sweep. Operates on world.units.
 
-local world    = require("core.world")
-local registry = require("core.registry")
-local log      = require("core.log")
+local world       = require("core.world")
+local registry    = require("core.registry")
+local log         = require("core.log")
+local pathfinding = require("core.pathfinding")
 
 local units = {}
+
+local Unit = {}
+Unit.__index = Unit
+
+function Unit:getAttribute(key)
+    return self.base_attributes[key] + self.acquired_attributes[key]
+end
 
 function units.spawnSerf(x, y)
     local tile_idx = tileIndex(x, y)
@@ -17,7 +25,7 @@ function units.spawnSerf(x, y)
     local first_name = name_list[math.random(#name_list)]
     local surname    = NameConfig.surname[math.random(#NameConfig.surname)]
 
-    local unit = registry.createEntity(world.units, {
+    local unit = registry.createEntity(world.units, setmetatable({
         name = first_name, surname = surname, gender = gender, class = "serf",
         is_dead = false, is_drafted = false, draft_tile = nil,
         age = 20, birth_day = 1, birth_season = 1, death_age = 60, is_child = false,
@@ -62,7 +70,7 @@ function units.spawnSerf(x, y)
         move_speed    = 1.0,
         path          = nil,
         visible_a     = {}, visible_b = {}, active_visible = "a",
-    })
+    }, Unit))
 
     unit.target_tile   = tile_idx
     t.target_of_unit   = unit.id
@@ -89,6 +97,137 @@ function units.spawnStarting()
             end
         end
     end
+end
+
+local FLOOD_DIRS = { {0,-1}, {0,1}, {-1,0}, {1,0} }
+
+-- Recalculate move_speed. Currently always 1.0; carry weight penalty wired in M13/M15.
+function Unit:recalcMoveSpeed()
+    self.move_speed = 1.0
+end
+
+-- Per-tick movement step: advance move_progress, transition tile when cost is met.
+function Unit:moveStep()
+    if self.path == nil then return end
+    if self.path.current > #self.path.tiles then
+        self.path = nil
+        return
+    end
+
+    local next_idx  = self.path.tiles[self.path.current]
+    local nx, ny    = tileXY(next_idx)
+    local next_tile = world.tiles[next_idx]
+    local cost      = world.getTileCost(next_tile)
+    if cost == nil then
+        self.path = nil
+        return
+    end
+
+    local dx = math.abs(nx - self.x)
+    local dy = math.abs(ny - self.y)
+    if dx == 1 and dy == 1 then cost = cost * SQRT2 end
+
+    self.move_progress = self.move_progress + self.move_speed
+    if self.move_progress >= cost then
+        self.move_progress = self.move_progress - cost
+
+        local old_tile = world.tiles[tileIndex(self.x, self.y)]
+        for i = 1, #old_tile.unit_ids do
+            if old_tile.unit_ids[i] == self.id then
+                old_tile.unit_ids[i] = old_tile.unit_ids[#old_tile.unit_ids]
+                old_tile.unit_ids[#old_tile.unit_ids] = nil
+                break
+            end
+        end
+        next_tile.unit_ids[#next_tile.unit_ids + 1] = self.id
+        self.x = nx
+        self.y = ny
+
+        self.path.current = self.path.current + 1
+        if self.path.current > #self.path.tiles then
+            self.path = nil
+            -- Verify the arrival tile is still claimed by this unit; flood-fill if not.
+            if world.tiles[tileIndex(self.x, self.y)].target_of_unit ~= self.id then
+                units.floodFillNearest(self)
+            end
+        end
+    end
+end
+
+-- Per-tick update for one unit.
+function Unit:tick()
+    self:moveStep()
+end
+
+-- Tick all living units.
+function units.tickAll()
+    for i = 1, #world.units do
+        local unit = world.units[i]
+        if unit.is_dead == false then
+            unit:tick()
+        end
+    end
+end
+
+-- Claim destination, release old target, run A*. Returns true on success.
+function units.startMove(unit, goal_idx)
+    local goal_tile = world.tiles[goal_idx]
+    if world.getTileCost(goal_tile) == nil then return false end
+    if goal_tile.target_of_unit ~= nil then return false end
+
+    local old_target_idx = unit.target_tile
+
+    goal_tile.target_of_unit = unit.id
+    unit.target_tile          = goal_idx
+    if old_target_idx ~= nil then
+        world.tiles[old_target_idx].target_of_unit = nil
+    end
+
+    local path = pathfinding.findPath(world.tiles, tileIndex(unit.x, unit.y), goal_idx)
+    if path == nil then
+        goal_tile.target_of_unit = nil
+        unit.target_tile          = old_target_idx
+        if old_target_idx ~= nil then
+            world.tiles[old_target_idx].target_of_unit = unit.id
+        end
+        return false
+    end
+
+    unit.path          = path
+    unit.move_progress = 0
+    return true
+end
+
+-- Flood-fill outward from unit's current tile to find the nearest free target tile.
+function units.floodFillNearest(unit)
+    local start_idx = tileIndex(unit.x, unit.y)
+    local queue     = { start_idx }
+    local head      = 1
+    local visited   = { [start_idx] = true }
+
+    while head <= #queue do
+        local cur = queue[head]; head = head + 1
+        local cx, cy = tileXY(cur)
+
+        if world.tiles[cur].target_of_unit == nil and cur ~= start_idx then
+            world.tiles[cur].target_of_unit = unit.id
+            unit.target_tile                = cur
+            return cur
+        end
+
+        for _, d in ipairs(FLOOD_DIRS) do
+            local nx, ny = cx + d[1], cy + d[2]
+            if nx >= 1 and nx <= MAP_WIDTH and ny >= 1 and ny <= MAP_HEIGHT then
+                local nidx = tileIndex(nx, ny)
+                if visited[nidx] == nil and world.getTileCost(world.tiles[nidx]) ~= nil then
+                    visited[nidx]       = true
+                    queue[#queue + 1]   = nidx
+                end
+            end
+        end
+    end
+
+    return nil
 end
 
 return units

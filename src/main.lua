@@ -1,5 +1,12 @@
 -- main.lua
-if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+ARGS_AUTO_NEWGAME = false
+ARGS_DEBUG        = false
+for i = 1, #arg do
+    if arg[i] == "--newgame" then ARGS_AUTO_NEWGAME = true end
+    if arg[i] == "--debug"   then ARGS_DEBUG        = true end
+end
+
+if ARGS_DEBUG then
     require("lldebugger").start()
 end
 

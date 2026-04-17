@@ -32,8 +32,11 @@ function loading.enter()
     validateMerchantConfig()
     validateHousingBinConfig()
     validateBuildingConfig()
-    log:info("STATE", "Config validation passed")
-    gamestate:switch(main_menu)
+    if ARGS_AUTO_NEWGAME then
+        gamestate:switch(require("app.generating"))
+    else
+        gamestate:switch(main_menu)
+    end
 end
 
 function validateResourceConfig()
